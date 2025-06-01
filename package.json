@@ -1,0 +1,22 @@
+{
+  "devDependencies": {
+    "@types/node": "^22.15.29",
+    "cross-env": "^7.0.3",
+    "tailwindcss": "^4.1.8"
+  },
+  "dependencies": {
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.49.8",
+    "@types/axios": "^0.9.36",
+    "@types/uuid": "^10.0.0",
+    "axios": "^1.9.0",
+    "bufferutil": "^4.0.9",
+    "framer-motion": "^12.15.0",
+    "next": "^15.3.3",
+    "node-fetch": "^3.3.2",
+    "postcss": "^8.5.4",
+    "utf-8-validate": "^6.0.5",
+    "uuid": "^11.1.0"
+  }
+}
