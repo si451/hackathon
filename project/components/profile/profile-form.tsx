@@ -26,13 +26,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { CREATOR_NICHES, SOCIAL_PLATFORMS } from "@/lib/constants";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
-import type { User, UserRole } from "@/lib/supabase";
 
 // Define types for our database responses
 interface BaseProfile {
   id: string;
-  role: UserRole;
+  role: "brand" | "creator" | "agency";
   email: string;
 }
 
@@ -121,115 +119,8 @@ export function ProfileForm() {
 
   const fetchProfile = async () => {
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-      if (!user) throw new Error("No user found");
-
-      // Fetch user role and basic info
-      const { data: userData, error: userDataError } = await supabase
-        .from("users_logins.users")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      if (userDataError) throw userDataError;
-
-      // Fetch role-specific data
-      let roleData: ProfileData | null = null;
-      switch (userData.role as UserRole) {
-        case "brand":
-          const { data: brandData, error: brandError } = await supabase
-            .from("users_logins.brands")
-            .select("*, users_profiles.brand_profiles(*)")
-            .eq("id", user.id)
-            .single();
-          if (brandError) throw brandError;
-          if (brandData && typeof brandData === 'object' && !('error' in brandData)) {
-            const typedBrandData = brandData as {
-              id: string;
-              company_name: string;
-              industry: string;
-              brand_profiles?: any[];
-            };
-            roleData = {
-              id: typedBrandData.id,
-              role: "brand",
-              email: userData.email,
-              company_name: typedBrandData.company_name,
-              industry: typedBrandData.industry,
-              brand_profiles: typedBrandData.brand_profiles,
-            } as BrandProfile;
-          }
-          break;
-
-        case "creator":
-          const { data: creatorData, error: creatorError } = await supabase
-            .from("users_logins.creators")
-            .select("*, users_profiles.creator_profiles(*)")
-            .eq("id", user.id)
-            .single();
-          if (creatorError) throw creatorError;
-          if (creatorData && typeof creatorData === 'object' && !('error' in creatorData)) {
-            const typedCreatorData = creatorData as {
-              id: string;
-              username: string;
-              niche: string;
-              creator_profiles?: any[];
-            };
-            roleData = {
-              id: typedCreatorData.id,
-              role: "creator",
-              email: userData.email,
-              username: typedCreatorData.username,
-              niche: typedCreatorData.niche,
-              creator_profiles: typedCreatorData.creator_profiles,
-            } as CreatorProfile;
-          }
-          break;
-
-        case "agency":
-          const { data: agencyData, error: agencyError } = await supabase
-            .from("users_logins.agencies")
-            .select("*, users_profiles.agency_profiles(*)")
-            .eq("id", user.id)
-            .single();
-          if (agencyError) throw agencyError;
-          if (agencyData && typeof agencyData === 'object' && !('error' in agencyData)) {
-            const typedAgencyData = agencyData as {
-              id: string;
-              agency_name: string;
-              specialization: string;
-              agency_profiles?: any[];
-            };
-            roleData = {
-              id: typedAgencyData.id,
-              role: "agency",
-              email: userData.email,
-              agency_name: typedAgencyData.agency_name,
-              specialization: typedAgencyData.specialization,
-              agency_profiles: typedAgencyData.agency_profiles,
-            } as AgencyProfile;
-          }
-          break;
-      }
-
-      if (roleData) {
-        setProfile(roleData);
-        form.reset({
-          name: roleData.role === "brand" ? roleData.company_name :
-                roleData.role === "agency" ? roleData.agency_name : "",
-          username: roleData.role === "creator" ? roleData.username : "",
-          email: userData.email,
-          bio: roleData.role === "brand" ? roleData.brand_profiles?.[0]?.company_description :
-               roleData.role === "creator" ? roleData.creator_profiles?.[0]?.bio :
-               roleData.role === "agency" ? roleData.agency_profiles?.[0]?.agency_description : "",
-          primaryNiche: roleData.role === "creator" ? roleData.niche :
-                       roleData.role === "brand" ? roleData.industry :
-                       roleData.role === "agency" ? roleData.specialization : "",
-          mainPlatform: "",
-          location: "",
-        });
-      }
+      // Fetch user profile data based on role
+      // ... existing code ...
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch profile");
     } finally {
@@ -242,80 +133,8 @@ export function ProfileForm() {
     setError(null);
 
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-      if (!user) throw new Error("No user found");
-
-      if (!profile) throw new Error("No profile data found");
-
-      // Update role-specific data
-      switch (profile.role) {
-        case "brand":
-          await supabase
-            .from("users_logins.brands")
-            .update({
-              company_name: data.name,
-              industry: data.primaryNiche,
-            })
-            .eq("id", user.id);
-
-          await supabase
-            .from("users_profiles.brand_profiles")
-            .upsert({
-              id: user.id,
-              company_description: data.bio,
-              website: "",
-              logo_url: "",
-              social_links: {},
-              contact_info: {},
-            });
-          break;
-
-        case "creator":
-          await supabase
-            .from("users_logins.creators")
-            .update({
-              username: data.username,
-              niche: data.primaryNiche,
-            })
-            .eq("id", user.id);
-
-          await supabase
-            .from("users_profiles.creator_profiles")
-            .upsert({
-              id: user.id,
-              bio: data.bio,
-              profile_picture_url: "",
-              portfolio_url: "",
-              skills: [],
-              social_links: {},
-            });
-          break;
-
-        case "agency":
-          await supabase
-            .from("users_logins.agencies")
-            .update({
-              agency_name: data.name,
-              specialization: data.primaryNiche,
-            })
-            .eq("id", user.id);
-
-          await supabase
-            .from("users_profiles.agency_profiles")
-            .upsert({
-              id: user.id,
-              agency_description: data.bio,
-              website: "",
-              logo_url: "",
-              social_links: {},
-              contact_info: {},
-            });
-          break;
-      }
-
-      toast.success("Profile updated successfully!");
-      await fetchProfile();
+      // Handle form submission
+      // ... existing code ...
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update profile");
       toast.error("Failed to update profile");
