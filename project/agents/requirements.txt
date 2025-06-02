@@ -18,4 +18,4 @@ autogen
 gunicorn
 fpdf 
 uuid
-PIL
+
