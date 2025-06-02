@@ -20,3 +20,4 @@ fpdf
 uuid
 razorpay
 PyPDF2
+reportlab
