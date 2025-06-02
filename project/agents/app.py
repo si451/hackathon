@@ -240,5 +240,5 @@ def verify_payment():
         return jsonify({'error': error_msg}), 500
 
 if __name__ == '__main__':
-    port = int(os.getenv('PORT', 3001))
+    port = process.env.PORT
     app.run(host='0.0.0.0', port=port, debug=True)
