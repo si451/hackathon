@@ -20,9 +20,11 @@ CORS(app)
 def load_mock_data():
     try:
         with open('data/mock_instagram_influencers.json', 'r') as f:
-            instagram_profiles = json.load(f)
+            instagram_data = json.load(f)
+            instagram_profiles = instagram_data.get('instagram_influencers', [])
         with open('data/mock_youtube_influencers.json', 'r') as f:
-            youtube_profiles = json.load(f)
+            youtube_data = json.load(f)
+            youtube_profiles = youtube_data.get('youtube_influencers', [])
         return instagram_profiles + youtube_profiles
     except Exception as e:
         print(f"Error loading mock data: {e}")
@@ -240,5 +242,5 @@ def verify_payment():
         return jsonify({'error': error_msg}), 500
 
 if __name__ == '__main__':
-    port = process.env.PORT
+    port = int(os.getenv('PORT', '3001'))
     app.run(host='0.0.0.0', port=port, debug=True)
