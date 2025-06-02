@@ -29,7 +29,7 @@ interface PaymentVerifyResponse {
   payment_date?: string;
 }
 
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Define Window interface with Razorpay
 declare global {

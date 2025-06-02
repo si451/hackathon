@@ -2,7 +2,7 @@ import { Influencer } from '../types/influencer';
 
 export class InfluencerSearchEngine {
   private static instance: InfluencerSearchEngine | null = null;
-  private readonly API_URL = 'http://localhost:3001/api/search';
+  private readonly API_URL = process.env.NEXT_PUBLIC_API_BASE_URL + '/search';
 
   private constructor() {}
 
