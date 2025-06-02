@@ -9,12 +9,39 @@ from document_generation_agent import DocumentGenerationAgent
 from esignature_agent import ESignatureAgent
 from payment_agent import PaymentAgent
 import base64
+import threading
+import time
+import requests
+import logging
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Keep-alive configuration
+KEEP_ALIVE_INTERVAL = 5 * 60  # 14 minutes in seconds
+SERVICE_URL = os.getenv('RENDER_EXTERNAL_URL', 'http://localhost:5000')
+
+def keep_alive():
+    """Background thread to keep the service alive"""
+    while True:
+        try:
+            response = requests.get(f"{SERVICE_URL}/keep-alive")
+            logger.info(f"Keep-alive ping sent. Status: {response.status_code}")
+        except Exception as e:
+            logger.error(f"Keep-alive ping failed: {str(e)}")
+        time.sleep(KEEP_ALIVE_INTERVAL)
+
+@app.route('/keep-alive')
+def keep_alive_endpoint():
+    """Endpoint to keep the service alive"""
+    return jsonify({"status": "alive"}), 200
 
 # Load mock data from data folder
 def load_mock_data():
@@ -241,6 +268,12 @@ def verify_payment():
         print(f"[ERROR] {error_msg}")
         return jsonify({'error': error_msg}), 500
 
+# Start the keep-alive thread when the app starts
 if __name__ == '__main__':
-    port = int(os.getenv('PORT', '3001'))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    # Start keep-alive thread
+    keep_alive_thread = threading.Thread(target=keep_alive, daemon=True)
+    keep_alive_thread.start()
+    
+    # Start the Flask app
+    port = int(os.getenv('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
