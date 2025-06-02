@@ -17,3 +17,5 @@ groq
 autogen
 gunicorn
 fpdf 
+uuid
+PIL
